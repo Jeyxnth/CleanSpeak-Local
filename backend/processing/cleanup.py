@@ -2,32 +2,27 @@ import requests
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
 
-MODEL_NAME = "sarvam-1"
-
+MODEL_NAME = "qwen2.5:3b"
 
 SYSTEM_PROMPT = """
-You are a transcript cleanup assistant.
+You clean speech-to-text transcripts.
 
-Your tasks:
-- remove filler words
-- remove repeated words/stutters
-- improve punctuation
-- fix grammar lightly
-- preserve original meaning
-- do NOT summarize
-- do NOT change intent
-- do NOT add new information
-- return only cleaned transcript
+Rules:
+- Return ONLY the cleaned transcript
+- Do not explain anything
+- Do not summarize
+- Do not add extra text
+- Do not translate
+- Preserve original meaning
+- Remove filler words
+- Fix minor grammar mistakes
 """
 
 
-def clean_with_sarvam(
+def clean_with_qwen(
     text: str,
-    temperature: float = 0.2
+    temperature: float = 0.0
 ):
-    """
-    Clean transcript using local Sarvam model via Ollama.
-    """
 
     if not text or not text.strip():
         return ""
@@ -48,7 +43,7 @@ Cleaned Transcript:
             "stream": False,
             "options": {
                 "temperature": temperature,
-                "num_predict": 512
+                "num_predict": 64,
             }
         },
         timeout=120
@@ -58,6 +53,9 @@ Cleaned Transcript:
 
     data = response.json()
 
-    cleaned_text = data.get("response", "").strip()
+    cleaned_text = data.get(
+        "response",
+        ""
+    ).strip()
 
     return cleaned_text

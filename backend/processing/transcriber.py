@@ -1,62 +1,93 @@
 
 import os
+import traceback
 
-# Force model/cache storage to D drive
+print("STEP 1: Setting cache paths")
+
 os.environ["HF_HOME"] = r"D:\AI\huggingface"
 os.environ["NEMO_CACHE_DIR"] = r"D:\AI\models"
 
-import nemo.collections.asr as nemo_asr
+print("STEP 2: Importing torch")
+
 import torch
 
+print("CUDA AVAILABLE:", torch.cuda.is_available())
 
-print("Loading NVIDIA Parakeet model...")
+if torch.cuda.is_available():
+    print("GPU:", torch.cuda.get_device_name(0))
+
+print("STEP 3: Importing NeMo")
+
+import nemo.collections.asr as nemo_asr
+
+print("STEP 4: Loading Parakeet model")
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-model = nemo_asr.models.ASRModel.from_pretrained(
-    model_name="nvidia/parakeet-tdt-0.6b-v2"
-)
+try:
 
-if DEVICE == "cuda":
-    model = model.cuda()
+    model = nemo_asr.models.ASRModel.from_pretrained(
+        model_name="nvidia/parakeet-tdt-0.6b-v2"
+    )
 
-print(f"Parakeet loaded successfully on {DEVICE}")
+    print("MODEL DOWNLOADED")
+
+    if DEVICE == "cuda":
+        model = model.cuda()
+
+    print(f"MODEL MOVED TO {DEVICE}")
+
+except Exception as e:
+
+    print("MODEL LOAD FAILED")
+    traceback.print_exc()
+
+    raise e
+
+print("STEP 5: Parakeet loaded successfully")
 
 
 def preload_transcriber(
-    model_name: str | None = None,
-    language: str = "en"
-) -> str:
-    """
-    Preload model during FastAPI startup.
-    """
-    return "parakeet-tdt-0.6b-v2"
+    model_name=None,
+    language="en"
+):
+    return "parakeet"
 
 
 def transcribe(
-    audio_path: str,
-    model_name: str | None = None,
-    language: str = "en"
-) -> str:
-    """
-    Transcribe audio using NVIDIA Parakeet.
-    """
+    audio_path,
+    model_name=None,
+    language="en"
+):
 
     if not os.path.exists(audio_path):
-        raise FileNotFoundError(
-            f"Audio file not found: {audio_path}"
-        )
+        raise FileNotFoundError(audio_path)
 
     result = model.transcribe([audio_path])
 
+    # Extract transcript safely
     if isinstance(result, list):
-        transcript = result[0]
+
+        first = result[0]
+
+        # NeMo Hypothesis object
+        if hasattr(first, "text"):
+            transcript = first.text
+
+        else:
+            transcript = str(first)
+
     else:
-        transcript = str(result)
+
+        if hasattr(result, "text"):
+            transcript = result.text
+        else:
+            transcript = str(result)
 
     transcript = " ".join(
         transcript.strip().split()
     )
 
     return transcript
+
 

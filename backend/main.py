@@ -17,7 +17,7 @@ from processing.transcriber import (
 
 from processing.preprocess import preprocess_audio
 
-from processing.cleanup import clean_with_sarvam
+from processing.cleanup import clean_with_qwen
 
 from processing.word_filter import (
     filter_words,
@@ -255,12 +255,12 @@ async def process_audio(
 
         if selected_mode == "clear":
 
-            sarvam_cleaned = clean_with_sarvam(
+            qwen_cleaned = clean_with_qwen(
                 raw_transcript
             )
 
             cleaned = filter_words(
-                sarvam_cleaned
+                qwen_cleaned
             )
 
         else:
