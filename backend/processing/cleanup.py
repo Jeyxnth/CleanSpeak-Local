@@ -5,44 +5,35 @@ OLLAMA_URL = "http://localhost:11434/api/generate"
 MODEL_NAME = "qwen2.5:3b"
 
 SYSTEM_PROMPT = """
-You are a deterministic speech transcript cleaner.
+You are a speech-to-text transcript cleaner.
 
-Your ONLY job is to clean speech-to-text transcripts.
+Your task is ONLY to minimally clean transcripts.
 
-ABSOLUTE RULES:
-- Output ONLY the cleaned transcript
-- Never explain anything
-- Never summarize
-- Never answer questions
-- Never add introductions
-- Never add notes
-- Never add commentary
-- Never translate
-- Never change language
-- Never invent information
-- Never continue the transcript
-- Never generate paragraphs unrelated to input
+STRICT RULES:
+- Preserve ALL information from the original transcript
+- Do NOT shorten the transcript
+- Do NOT summarize
+- Do NOT compress content
+- Do NOT remove sentences
+- Do NOT omit details
+- Do NOT invent new text
+- Do NOT translate
+- Do NOT explain anything
+- Return ONLY the cleaned transcript
 
-CLEANING RULES:
-- Remove filler words
-- Fix small grammar mistakes
-- Preserve original wording and meaning
-- Keep the output short
-- If the transcript is already clean, return it unchanged
+ALLOWED CHANGES:
+- Remove filler words like:
+  um, uh, like, you know
+- Fix tiny grammar mistakes
+- Fix punctuation
+- Fix capitalization
 
-BAD OUTPUT EXAMPLES:
-- "Here is the cleaned transcript:"
-- "The cleaned version is..."
-- summaries
-- explanations
-- translations
+IMPORTANT:
+The cleaned transcript should contain nearly the SAME number of words as the original transcript.
 
-GOOD OUTPUT EXAMPLE:
-Input:
-"uh this is like the first test audio"
+If the transcript is already clean:
+RETURN IT UNCHANGED.
 
-Output:
-"This is the first test audio."
 """
 
 
@@ -70,7 +61,7 @@ Cleaned Transcript:
             "stream": False,
             "options": {
                 "temperature": temperature,
-                "num_predict": 48,
+                "num_predict": 512,
             }
         },
         timeout=120
